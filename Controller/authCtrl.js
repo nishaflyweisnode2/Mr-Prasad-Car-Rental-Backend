@@ -50,17 +50,13 @@ const loginUser = async (req, res) => {
   try {
     const { name, mobile } = req.body;
 
-    // Find the user by login name and mobile number
     const user = await User.findOne({ name, mobile });
     if (!user) {
       return createResponse(res, 404, "User not found");
     }
-    // Generate OTP
     const otp = OTP.generateOTP();
 
     const token = OTP.generateJwtToken(user._id);
-
-    // Save the generated OTP to the user object
     user.otp = otp;
     await user.save();
 
@@ -109,7 +105,6 @@ const getAllUser = async (req, res) => {
   }
 }
 
-
 const getByUser = async (req, res) => {
   const id = req.params.id;
   try {
@@ -119,7 +114,6 @@ const getByUser = async (req, res) => {
     res.status(400).json("Something went wrong");
   }
 }
-
 
 const updateUser = async (req, res) => {
   const id = req.params.id;
@@ -131,8 +125,6 @@ const updateUser = async (req, res) => {
   }
 }
 
-
-
 const deleteUser = async (req, res) => {
   const id = req.params.id;
   try {
@@ -143,8 +135,56 @@ const deleteUser = async (req, res) => {
   }
 }
 
+const resendOTP = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findOne({ _id: id });
+    if (!user) {
+      return res.status(404).send({ status: 404, message: "User not found" });
+    }
+    const otp = OTP.generateOTP();
+    const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+    const accountVerification = false;
+    const updated = await User.findOneAndUpdate(
+      { _id: user._id },
+      { otp, otpExpiration, accountVerification },
+      { new: true }
+    );
+    let obj = {
+      id: updated._id,
+      otp: updated.otp,
+      phone: updated.phone,
+    };
+    res.status(200).send({ status: 200, message: "OTP resent", data: obj });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .send({ status: 500, message: "Server error" + error.message });
+  }
+};
 
-
+const ForgetPassword = async (req, res) => {
+  const { mobile } = req.body;
+  try {
+    const user = await User.findOne({ mobile }, { new: true });
+    if (!user) {
+      return res.status(404).json({ message: "Number not found" });
+    }
+    const otp = OTP.generateOTP();
+    user.otp = otp;
+    await user.save();
+    // await twilioClient.messages.create({
+    //   body: `Your OTP for password reset is: ${otp}`,
+    //   from: "YOUR_TWILIO_PHONE_NUMBER",
+    //   to: user.mobile,
+    // });
+    res.json({ message: "OTP sent successfully", otp: otp });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ errors: error });
+  }
+};
 
 module.exports = {
   createUser,
@@ -153,5 +193,7 @@ module.exports = {
   getAllUser,
   getByUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  resendOTP,
+  ForgetPassword,
 };

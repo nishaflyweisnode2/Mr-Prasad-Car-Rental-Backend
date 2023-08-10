@@ -34,19 +34,19 @@ const userSchema = new mongoose.Schema(
 
 
 // PASSWORD - HASH
-userSchema.pre("save", async function (next) {
-  const salt = await bcrypt.genSaltSync(10);
-  this.password = await bcrypt.hashSync(this.password, salt);
-  next();
-});
+// userSchema.pre("save", async function (next) {
+//   const salt = await bcrypt.genSaltSync(10);
+//   this.password = await bcrypt.hashSync(this.password, salt);
+//   next();
+// });
 
 //MATCH HASH PASSWORD
-userSchema.methods.isPasswordValid = async function (enteredPassword) {
-  try {
-    return await bcrypt.compare(enteredPassword, this.password);
-  } catch (error) {
-    throw error;
-  }
-};
+// userSchema.methods.isPasswordValid = async function (enteredPassword) {
+//   try {
+//     return await bcrypt.compare(enteredPassword, this.password);
+//   } catch (error) {
+//     throw error;
+//   }
+// };
 
 module.exports = mongoose.model("user", userSchema);
