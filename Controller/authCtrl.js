@@ -17,7 +17,7 @@ const createUser = async (req, res) => {
       // Check if email and mobile match
       if (existingUser.email === req.body.email && existingUser.mobile === req.body.mobile) {
         return createResponse(res, 409, "Email address already in use");
-      } else if (existingUser.mobile){
+      } else if (existingUser.mobile) {
         // Email and mobile don't match, but user exists
         return createResponse(res, 400, "mobile already in use");
       } else {
@@ -62,7 +62,7 @@ const loginUser = async (req, res) => {
 
     // Send OTP to the user (example code)
     // sendOTP(user.mobileNumber, otp);
-res.setHeader("x-api-key", /* "Bearer "*/ +token);
+    res.setHeader("x-api-key", /* "Bearer "*/ +token);
     return createResponse(res, 200, "OTP sent for verification", {
       userId: user._id,
       token,
@@ -117,11 +117,30 @@ const getByUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const id = req.params.id;
+  const { name, email, mobile } = req.body;
+  
   try {
-    const user = await User.findByIdAndUpdate(id);
-    res.status(200).json(user);
+    const existingUser = await User.findById(id);
+    if (!existingUser) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    existingUser.name = name;
+    existingUser.email = email;
+    existingUser.mobile = mobile;
+    const updatedUser = await existingUser.save();
+
+    res.status(200).json({
+      message: "User updated successfully",
+      data: updatedUser
+    });
   } catch (error) {
-    res.status(400).json("Something went wrong");
+    res.status(500).json({
+      message: "Something went wrong",
+      error: error.message
+    });
   }
 }
 
