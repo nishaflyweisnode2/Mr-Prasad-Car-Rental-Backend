@@ -9,12 +9,11 @@ const CarSchema = new mongoose.Schema({
     type: String,
   },
   brand: {
-    type: String,
-    required: true,
+    type: mongoose.SchemaTypes.ObjectId,
   },
   mileage: {
     type: Number,
-    default:"",
+    default: "",
   },
   numberOfSeats: {
     type: Number,
@@ -52,10 +51,10 @@ const CarSchema = new mongoose.Schema({
     required: true,
   },
   pickup: {
-    type:String,
+    type: String,
   },
   Drop: {
-    type:String,
+    type: String,
   },
   Date: {
     type: String,
@@ -63,14 +62,14 @@ const CarSchema = new mongoose.Schema({
   location: {
     type: {
       type: String,
-      enum: ['Point'],
+      enum: ["Point"],
       // required: true
     },
-  coordinates: {
+    coordinates: {
       type: [Number],
       // required: true
-    }
-  }
+    },
+  },
 });
 
 CarSchema.index({ location: '2dsphere' });

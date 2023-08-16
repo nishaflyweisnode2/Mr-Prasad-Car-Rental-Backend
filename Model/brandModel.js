@@ -7,6 +7,9 @@ const brandSchema = new mongoose.Schema({
     trim: true,
     minlength: 1,
     maxlength: 50
+  },
+  brandimage: {
+    type:String,
   }
 })
 

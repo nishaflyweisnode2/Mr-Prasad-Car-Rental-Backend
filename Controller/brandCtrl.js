@@ -14,30 +14,38 @@ const getSingleBrand = async (req, res) => {
 };
 
 const createBrand = async (req, res) => {
-  const brand = new Brand({ name: req.body.name });
-  await brand.save();
-
-  res.status(201).send({ msg: brand });
+  try {
+    const { name } = req.body;
+    const brandimage = req.file.path;
+    const brand = new Brand({ name, brandimage });
+    await brand.save();
+    res.status(201).json({ msg: "Create brand successfully", data: brand });
+  } catch (error) {
+    res.json({
+      error: error.message,
+    })
+  }
 };
 
 const updateBrand = async (req, res) => {
-    const brand = await Brand.findByIdAndUpdate(
-      req.params.id,
-      { name: req.body.name },
-      { new: true }
-    );
+  const brand = await Brand.findByIdAndUpdate(
+    req.params.id,
+    { name: req.body.name },
+    { new: true }
+  );
 
-    if (!brand) return res.status(404).send(notFoundError);
+  if (!brand) return res.status(404).send(notFoundError);
 
   res.send({ msg: brand });
-}
+};
 
-const deleteBrand = async (req, res) =>{
+const deleteBrand = async (req, res) => {
   const brand = await Brand.findByIdAndDelete(req.params.id);
 
-  if (!brand) return res.status(404).send("Something went wrong in deleting the brand");
+  if (!brand)
+    return res.status(404).send("Something went wrong in deleting the brand");
 
-  res.send({ msg:"msg deleted successfully", data: brand })
+  res.send({ msg: "msg deleted successfully", data: brand });
 };
 
 module.exports = {
@@ -45,5 +53,5 @@ module.exports = {
   getSingleBrand,
   createBrand,
   updateBrand,
-  deleteBrand
+  deleteBrand,
 };
