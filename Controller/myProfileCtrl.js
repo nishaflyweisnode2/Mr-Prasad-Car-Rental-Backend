@@ -65,7 +65,9 @@ const uploadAadharCard = async (req, res) => {
 
     await profile.save();
 
-    res.json({ success: true, message: "Aadhaar card uploaded successfully" });
+    res.json({
+      success: true, message: "Aadhaar card uploaded successfully",
+  data:profile,  });
   } catch (error) {
     console.error("Error uploading Aadhaar card", error);
     res
@@ -103,7 +105,11 @@ const uploadSelfie = async (req, res) => {
 
     await profile.save();
 
-    res.json({ success: true, message: "Selfie uploaded successfully" });
+    res.json({
+      success: true,
+      message: "Selfie uploaded successfully",
+      data: profile,
+    });
   } catch (error) {
     console.error("Error uploading selfie", error);
     res
