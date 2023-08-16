@@ -1,5 +1,5 @@
 const User = require("../Model/authModel");
-const OTP = require("../Config/OTP-Token")
+const OTP = require("../Config/OTP-Token");
 const { createResponse } = require("../utils/response");
 
 ////////////////////////////////////////// CREATE USER /////////////////////////////////
@@ -7,17 +7,17 @@ const { createResponse } = require("../utils/response");
 const createUser = async (req, res) => {
   try {
     const existingUser = await User.findOne({
-      $or: [
-        { email: req.body.email },
-        { mobile: req.body.mobile }
-      ]
+      $or: [{ email: req.body.email }, { mobile: req.body.mobile }],
     });
 
     if (existingUser) {
       // Check if email and mobile match
-      if (existingUser.email === req.body.email && existingUser.mobile === req.body.mobile) {
+      if (
+        existingUser.email === req.body.email &&
+        existingUser.mobile === req.body.mobile
+      ) {
         return createResponse(res, 409, "Email address already in use");
-      } else if (existingUser.mobile){
+      } else if (existingUser.mobile) {
         // Email and mobile don't match, but user exists
         return createResponse(res, 400, "mobile already in use");
       } else {
@@ -27,7 +27,7 @@ const createUser = async (req, res) => {
     // Generate OTP
     const otp = OTP.generateOTP();
 
-    const newUser = new User({ ...req.body, otp, });
+    const newUser = new User({ ...req.body, otp });
 
     await newUser.save();
 
@@ -62,11 +62,11 @@ const loginUser = async (req, res) => {
 
     // Send OTP to the user (example code)
     // sendOTP(user.mobileNumber, otp);
-res.setHeader("x-api-key", /* "Bearer "*/ +token);
+    res.setHeader("x-api-key", /* "Bearer "*/ +token);
     return createResponse(res, 200, "OTP sent for verification", {
       userId: user._id,
       token,
-      otp
+      otp,
     });
   } catch (error) {
     console.log("Internal server error", error);
@@ -98,12 +98,12 @@ const verifyOTP = async (req, res) => {
 
 const getAllUser = async (req, res) => {
   try {
-    const user = await User.find()
+    const user = await User.find();
     res.status(200).json(user);
   } catch (error) {
     res.status(400).json("Something went wrong");
   }
-}
+};
 
 const getByUser = async (req, res) => {
   const id = req.params.id;
@@ -113,7 +113,7 @@ const getByUser = async (req, res) => {
   } catch (error) {
     res.status(400).json("Something went wrong");
   }
-}
+};
 
 const updateUser = async (req, res) => {
   const id = req.params.id;
@@ -123,7 +123,7 @@ const updateUser = async (req, res) => {
   } catch (error) {
     res.status(400).json("Something went wrong");
   }
-}
+};
 
 const deleteUser = async (req, res) => {
   const id = req.params.id;
@@ -133,7 +133,7 @@ const deleteUser = async (req, res) => {
   } catch (error) {
     res.status(400).json("Something went wrong");
   }
-}
+};
 
 const resendOTP = async (req, res) => {
   const { id } = req.params;
@@ -186,6 +186,30 @@ const ForgetPassword = async (req, res) => {
   }
 };
 
+const resetName = async (req, res) => {
+  const { mobile, otp, newName } = req.body;
+  try {
+    const user = await User.findOne({ mobile, otp:otp });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found or OTP incorrect" });
+    }
+
+    user.name = newName;
+    await user.save();
+
+    res.json({
+      message: "Name reset successfully",
+      data: user
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ errors: error });
+  }
+};
+
 module.exports = {
   createUser,
   loginUser,
@@ -196,4 +220,5 @@ module.exports = {
   deleteUser,
   resendOTP,
   ForgetPassword,
+  resetName,
 };

@@ -8,6 +8,7 @@ const {
   updateUser,
   resendOTP,
   ForgetPassword,
+  resetName,
 } = require("../Controller/authCtrl");
 const Admin = require("../Middleware/admin");
 const verifyToken = require("../Middleware/verifyToken");
@@ -23,5 +24,6 @@ router.put("/user/:id", verifyToken, updateUser);
 router.delete("/user/:id", /* Admin, */ deleteUser);
 router.post("/resendOtp/:id", resendOTP);
 router.post("/forget", ForgetPassword);
+router.post("/reset/name", resetName);
 
 module.exports = router;
