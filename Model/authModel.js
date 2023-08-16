@@ -21,15 +21,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    drivingLicense: {
-      type: String,
-    },
-    aadhaarCard: {
-      type: String,
-    },
-    selfie: {
-      type: String,
-    },
     otp: {
       type: String,
     },

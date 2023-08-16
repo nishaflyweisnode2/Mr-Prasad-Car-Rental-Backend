@@ -1,4 +1,5 @@
 const Profile = require("../Model/myProfileModel");
+const User = require("../Model/authModel");
 const cloudinary = require("cloudinary");
 
 const uploadLicense = async (req, res) => {
@@ -17,6 +18,8 @@ const uploadLicense = async (req, res) => {
     const result = await cloudinary.uploader.upload(file.path, {
       folder: "Images",
     });
+
+    await User.findByIdAndUpdate(userId, { verified: true });
 
     const profile = new Profile({
       userId,
@@ -41,8 +44,6 @@ const uploadLicense = async (req, res) => {
 const uploadAadharCard = async (req, res) => {
   const { userId } = req.body;
   const file = req.file;
-
-  // Check if the file type is allowed
   const allowedFileTypes = ["jpg", "jpeg", "png"];
   if (
     !allowedFileTypes.includes(file.originalname.split(".")[1].toLowerCase())
@@ -58,6 +59,8 @@ const uploadAadharCard = async (req, res) => {
       folder: "Images",
     });
 
+    await User.findByIdAndUpdate(userId, { verified: true });
+
     const profile = new Profile({
       userId,
       aadhaarCard: result.secure_url,
@@ -66,8 +69,10 @@ const uploadAadharCard = async (req, res) => {
     await profile.save();
 
     res.json({
-      success: true, message: "Aadhaar card uploaded successfully",
-  data:profile,  });
+      success: true,
+      message: "Aadhaar card uploaded successfully",
+      data: profile,
+    });
   } catch (error) {
     console.error("Error uploading Aadhaar card", error);
     res
@@ -96,12 +101,12 @@ const uploadSelfie = async (req, res) => {
       folder: "Images",
     });
 
+    await User.findByIdAndUpdate(userId, { verified: true });
+
     const profile = new Profile({
       userId,
       selfie: result.secure_url,
     });
-
-    console.log(profile);
 
     await profile.save();
 
