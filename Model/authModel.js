@@ -9,33 +9,42 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      unique: true,
-      lowercase: true,
+      // unique: true,
+      // lowercase: true,
     },
     password: {
       type: String,
       // required: true,
-      default: ""
+      default: "",
     },
     mobile: {
       type: String,
       default: "",
+    },
+    drivingLicense: {
+      type: String,
+    },
+    aadhaarCard: {
+      type: String,
+    },
+    selfie: {
+      type: String,
     },
     otp: {
       type: String,
     },
     role: {
       type: String,
-      default : "user"
+      default: "user",
     },
     verified: {
       type: Boolean,
-      default:"true",
-    }
+      default: "false",
+    },
   },
   { timestamps: true }
 );
-
+module.exports = mongoose.model("user", userSchema);
 
 // PASSWORD - HASH
 // userSchema.pre("save", async function (next) {
@@ -52,5 +61,3 @@ const userSchema = new mongoose.Schema(
 //     throw error;
 //   }
 // };
-
-module.exports = mongoose.model("user", userSchema);

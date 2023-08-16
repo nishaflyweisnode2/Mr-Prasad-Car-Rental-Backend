@@ -21,6 +21,8 @@ const storage = new CloudinaryStorage({
   },
 });
 
+const verifyToken = require("../Middleware/verifyToken");
+
 const upload = multer({ storage: storage });
 
 router.use((err, req, res, next) => {
@@ -34,9 +36,9 @@ router.use((err, req, res, next) => {
   }
 });
 
-router.post('/upload/license', upload.single('license'), uploadLicense)
-router.post('/upload/aadhaar', upload.single('aadhaar'), uploadAadharCard)
-router.post('/upload/selfie', upload.single('selfie'), uploadSelfie)
+router.post('/upload/license', /* verifyToken, */ upload.single('license'), uploadLicense)
+router.post('/upload/aadhaar', /* verifyToken, */ upload.single('aadhaar'), uploadAadharCard)
+router.post('/upload/selfie', /* verifyToken, */ upload.single('selfie'), uploadSelfie)
 
 // Handle unhandled promise rejections
 

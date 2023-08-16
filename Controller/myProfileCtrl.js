@@ -2,56 +2,56 @@ const Profile = require("../Model/myProfileModel");
 const cloudinary = require("cloudinary");
 
 const uploadLicense = async (req, res) => {
+  const { userId } = req.body;
   const file = req.file;
-  
-
-  // Check if the file type is allowed
   const allowedFileTypes = ["jpg", "jpeg", "png"];
-  if (!allowedFileTypes.includes(file.originalname.split('.')[1].toLowerCase())) {
+  if (
+    !allowedFileTypes.includes(file.originalname.split(".")[1].toLowerCase())
+  ) {
     return res.status(400).json({
       success: false,
-      message: 'Only JPG, JPEG, and PNG images are allowed'
+      message: "Only JPG, JPEG, and PNG images are allowed",
     });
   }
-
-  // Upload the file to Cloudinary
   try {
     const result = await cloudinary.uploader.upload(file.path, {
       folder: "Images",
     });
 
-    // Save the file's secure URL in the database
     const profile = new Profile({
-      drivingLicense: result.secure_url
+      userId,
+      drivingLicense: result.secure_url,
     });
     await profile.save();
 
-    // Return a success message
-    res.json({ success: true, message: 'License uploaded successfully' });
+    res.json({
+      success: true,
+      message: "License uploaded successfully",
+      data: profile,
+    });
   } catch (error) {
-    // Handle the error
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to upload the license'
+      message: "Failed to upload the license",
     });
   }
 };
 
 const uploadAadharCard = async (req, res) => {
-
+  const { userId } = req.body;
   const file = req.file;
-  
 
   // Check if the file type is allowed
   const allowedFileTypes = ["jpg", "jpeg", "png"];
-  if (!allowedFileTypes.includes(file.originalname.split('.')[1].toLowerCase())) {
+  if (
+    !allowedFileTypes.includes(file.originalname.split(".")[1].toLowerCase())
+  ) {
     return res.status(400).json({
       success: false,
-      message: 'Only JPG, JPEG, and PNG images are allowed'
+      message: "Only JPG, JPEG, and PNG images are allowed",
     });
   }
-
 
   try {
     const result = await cloudinary.uploader.upload(file.path, {
@@ -59,32 +59,35 @@ const uploadAadharCard = async (req, res) => {
     });
 
     const profile = new Profile({
-      aadhaarCard: result.secure_url
+      userId,
+      aadhaarCard: result.secure_url,
     });
 
     await profile.save();
 
-    res.json({ success: true, message: 'Aadhaar card uploaded successfully' });
+    res.json({ success: true, message: "Aadhaar card uploaded successfully" });
   } catch (error) {
-    console.error('Error uploading Aadhaar card', error);
-    res.status(500).json({ success: false, message: 'Failed to upload Aadhaar card' });
+    console.error("Error uploading Aadhaar card", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to upload Aadhaar card" });
   }
 };
 
 const uploadSelfie = async (req, res) => {
-
   const file = req.file;
-  
+  const { userId } = req.body;
 
   // Check if the file type is allowed
   const allowedFileTypes = ["jpg", "jpeg", "png"];
-  if (!allowedFileTypes.includes(file.originalname.split('.')[1].toLowerCase())) {
+  if (
+    !allowedFileTypes.includes(file.originalname.split(".")[1].toLowerCase())
+  ) {
     return res.status(400).json({
       success: false,
-      message: 'Only JPG, JPEG, and PNG images are allowed'
+      message: "Only JPG, JPEG, and PNG images are allowed",
     });
   }
-
 
   try {
     const result = await cloudinary.uploader.upload(file.path, {
@@ -92,27 +95,28 @@ const uploadSelfie = async (req, res) => {
     });
 
     const profile = new Profile({
-      selfie: result.secure_url
+      userId,
+      selfie: result.secure_url,
     });
 
     console.log(profile);
 
     await profile.save();
 
-    res.json({ success: true, message: 'Selfie uploaded successfully' });
+    res.json({ success: true, message: "Selfie uploaded successfully" });
   } catch (error) {
-    console.error('Error uploading selfie', error);
-    res.status(500).json({ success: false, message: 'Failed to upload selfie' });
+    console.error("Error uploading selfie", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to upload selfie" });
   }
 };
 
 module.exports = {
   uploadLicense,
   uploadAadharCard,
-  uploadSelfie
+  uploadSelfie,
 };
-
-
 
 // const createProfile = async (req, res) => {
 // const drivingLicenseFilename = req.file.filename;
@@ -139,8 +143,3 @@ module.exports = {
 // res.status(500).send("An error occurred while updating the profile");
 // }
 // };
-
-
-
-
-
