@@ -24,6 +24,6 @@ router.put("/user/:id", verifyToken, updateUser);
 router.delete("/user/:id", /* Admin, */ deleteUser);
 router.post("/resendOtp/:id", resendOTP);
 router.post("/forget", ForgetPassword);
-router.post("/reset/name", resetName);
+router.post("/reset/name", verifyToken, resetName);
 
 module.exports = router;

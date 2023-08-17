@@ -179,7 +179,7 @@ const ForgetPassword = async (req, res) => {
     //   from: "YOUR_TWILIO_PHONE_NUMBER",
     //   to: user.mobile,
     // });
-    res.json({ message: "OTP sent successfully", otp: otp });
+    res.json({ message: "OTP sent successfully", otp: otp, user: user });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ errors: error });
@@ -187,14 +187,14 @@ const ForgetPassword = async (req, res) => {
 };
 
 const resetName = async (req, res) => {
-  const { mobile, otp, newName } = req.body;
+  const { newName } = req.body;
+  const userId = req.user;
   try {
-    const user = await User.findOne({ mobile, otp:otp });
+    console.log(req.user);
+    const user = await User.findById(userId);
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User not found or OTP incorrect" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     user.name = newName;
@@ -202,7 +202,7 @@ const resetName = async (req, res) => {
 
     res.json({
       message: "Name reset successfully",
-      data: user
+      data: user,
     });
   } catch (error) {
     console.log(error);
