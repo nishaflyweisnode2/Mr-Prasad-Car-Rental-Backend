@@ -32,6 +32,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: "false",
     },
+    favoriteCars: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Car',
+    }],
+    isHost: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -48,6 +48,34 @@ const User = require("../Model/authModel");
 //     }
 // };
 
+
+
+
+
+// const CreatePaymentOrder = async (req, res) => {
+//   const { userId, bookingId, amount, paymentMethod } = req.body;
+
+//   // Validate the request body
+//   if (!userId || !bookingId || !amount || !paymentMethod) {
+//     return res.status(400).send("Invalid request body");
+//   }
+
+//   // Check if the user exists
+//   const user = await User.findOne({ userId });
+//   if (!user) {
+//     return res.status(404).send("User not found");
+//   }
+
+//   // Check if the booking exists
+//   const booking = await Booking.findOne({ bookingId });
+//   if (!booking) {
+//     return res.status(404).send("Booking not found");
+//   }
+
+//  
+
+
+
 const CreatePaymentOrder = async (req, res) => {
   const { userId, bookingId, amount, paymentMethod } = req.body;
 
@@ -56,36 +84,44 @@ const CreatePaymentOrder = async (req, res) => {
     return res.status(400).send("Invalid request body");
   }
 
-  // Check if the user exists
-  const user = await User.findOne({ userId });
-  if (!user) {
-    return res.status(404).send("User not found");
+  try {
+    // Check if the user exists
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // Check if the booking exists
+    const booking = await Booking.findOne({ _id: bookingId });
+    if (!booking) {
+      return res.status(404).send("Booking not found");
+    }
+
+    // Create a new payment
+    const CreatePayment = new payment({
+      userId,
+      bookingId,
+      amount,
+      paymentMethod,
+      status: true,
+      receipt: "",
+      amount_paid: amount,
+      type: "given",
+      date: new Date(),
+    });
+
+    // Save the payment
+    const paymentResult = await CreatePayment.save();
+
+    // Update the booking status to 'paid'
+    await Booking.findByIdAndUpdate(bookingId, { $set: { status: 'paid' } });
+
+    // Return the new payment
+    res.status(201).json({ message: 'Payment created successfully', payment: paymentResult });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  // Check if the booking exists
-  const booking = await Booking.findOne({ bookingId });
-  if (!booking) {
-    return res.status(404).send("Booking not found");
-  }
-
-  // Create a new payment
-  const CreatePayment = new payment({
-    userId,
-    bookingId,
-    amount,
-    paymentMethod,
-    status: true,
-    receipt: "",
-    amount_paid: amount,
-    type: "given",
-    date: new Date(),
-  });
-
-  // Save the payment
-  await CreatePayment.save();
-
-  // Return the new payment
-  res.status(201).send(CreatePayment);
 };
 
 

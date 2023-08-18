@@ -5,7 +5,12 @@ const {
   updateCar,
   deleteCar,
   getNearbyCar,
-  getmyTrip,
+  getMyTrip,
+  addToFavorites,
+  getFavoriteCars,
+  becomeHost,
+  addCarForRental
+
 } = require("../Controller/carCtrl");
 
 const verifyToken = require("../Middleware/verifyToken");
@@ -18,6 +23,9 @@ router.get("/:id", getCar);
 router.put("/:id", verifyToken, updateCar);
 router.delete("/:id", deleteCar);
 router.get("/nearby/get", verifyToken, getNearbyCar);
-router.get("/mytrip/:id", getmyTrip);
+router.get("/mytrip/:userId", getMyTrip);
+router.post('/cars/:userId/favorites', verifyToken, addToFavorites);
+router.get('/favorite-cars/:userId', verifyToken, getFavoriteCars);
+router.post("/become-host/:userId", verifyToken, becomeHost);
 
 module.exports = router;

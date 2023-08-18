@@ -56,7 +56,7 @@ const paymentSchema = mongoose.Schema({
     // },
     orderStatus: {
         type: String,
-        default: "Cancelled",
+        default: "Ordered",
         enum: ["Cancelled", "Invoiced", "Ordered"],
     },
 });

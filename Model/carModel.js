@@ -3,6 +3,11 @@ const mongoose = require("mongoose");
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const CarSchema = new mongoose.Schema({
+  owner: {
+    type: ObjectId,
+    ref: "user",
+    required: true,
+  },
   name: {
     type: String,
     required: true,
@@ -12,6 +17,11 @@ const CarSchema = new mongoose.Schema({
   },
   brand: {
     type: ObjectId,
+    ref: 'Brand',
+  },
+  year: {
+    type: String,
+    required: true,
   },
   mileage: {
     type: Number,
