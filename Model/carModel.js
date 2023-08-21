@@ -82,6 +82,26 @@ const CarSchema = new mongoose.Schema({
       // required: true
     },
   },
+  aboutCar: {
+    type: String,
+  },
+  carLocation: {
+    address: {
+      address: String,
+      State: String,
+      city: String,
+      pincode: String,
+    },
+    geolocation: {
+      type: ObjectId,
+      ref: 'location',
+      // required: true,
+    }
+  },
+  rentalCount: {
+    type: Number,
+    default: 0,
+  },
 });
 
 CarSchema.index({ location: '2dsphere' });

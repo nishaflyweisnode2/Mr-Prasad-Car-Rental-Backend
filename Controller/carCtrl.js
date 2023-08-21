@@ -2,6 +2,8 @@ const Car = require("../Model/carModel");
 const Brand = require("../Model/brandModel");
 const UserDb = require("../Model/authModel");
 const Booking = require("../Model/bookingModel");
+const Location = require("../Model/locationModel");
+const User = require("../Model/authModel");
 
 
 ///////////////////////////////////////////// CREATE CAR //////////////////////////////////
@@ -31,33 +33,46 @@ const Booking = require("../Model/bookingModel");
 
 const createCar = async (req, res) => {
   try {
-    const user = await UserDb.exists({ _id: req.body.owner });
+    const { owner, brand, carLocation, ...carData } = req.body;
 
-    if (!user) {
+    const userExists = await UserDb.exists({ _id: owner });
+    if (!userExists) {
       return res.status(404).json({ error: "User ID does not exist" });
     }
 
-    const populateduser = await UserDb.findById(req.body.owner).select('name');
-
-    const brandExists = await Brand.exists({ _id: req.body.brand });
-
+    const brandExists = await Brand.exists({ _id: brand });
     if (!brandExists) {
       return res.status(400).json({ error: 'Brand ID does not exist' });
     }
-    const populatedBrand = await Brand.findById(req.body.brand).select('-__v');
+
+    const locationExists = await Location.exists({ _id: carLocation.geolocation });
+    if (!locationExists) {
+      return res.status(400).json({ error: 'Location ID does not exist' });
+    }
+
+    const populatedUser = await UserDb.findById(owner).select('name');
+    const populatedBrand = await Brand.findById(brand).select('-__v');
+    const populatedLocation = await Location.findById(carLocation.geolocation).select('-__v');
 
     const newCar = new Car({
-      ...req.body,
+      ...carData,
       brand: populatedBrand,
-      owner: populateduser
+      owner: populatedUser,
+      carLocation: {
+        address: carLocation.address,
+        geolocation: populatedLocation
+      }
     });
+
     const savedCar = await newCar.save();
+
     res.json(savedCar);
   } catch (error) {
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map((err) => err.message);
       res.status(400).json({ error: errors });
     } else {
+      console.error(error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -67,7 +82,12 @@ const createCar = async (req, res) => {
 
 const getCarList = async (req, res) => {
   try {
-    const carList = await Car.find().sort("name");
+    const carList = await Car.find()
+      .populate('owner', 'name')
+      .populate('brand', '-__v');
+    if (!carList) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
     res.json(carList);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -78,10 +98,17 @@ const getCarList = async (req, res) => {
 
 const getCar = async (req, res) => {
   try {
-    const carList = await Car.findById(req.params.id).sort("name");
-    res.json(carList);
+    const car = await Car.findById(req.params.id)
+      .populate('owner', 'name')
+      .populate('brand', '-__v');
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    res.json(car);
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -125,7 +152,6 @@ const getNearbyCar = async (req, res) => {
   try {
     const { latitude, longitude /* radius */ } = req.query;
     console.log(latitude, longitude /* radius */);
-    // Ensure latitude and longitude are provided
     if (!latitude || !longitude  /* ||!radius */) {
       return res.status(400).json({ error: 'Latitude and longitude are required.' });
     }
@@ -274,6 +300,102 @@ const becomeHost = async (req, res) => {
 
 
 
+const popularCars = async (req, res) => {
+  try {
+    const popularCars = await Car.find()
+      .sort({ rentalCount: -1 })
+      .limit(10);
+    if (!popularCars || popularCars.length === 0) {
+      return res.status(404).json({ error: "popular not found" });
+    }
+    res.status(200).json({ popularCars });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+
+const getCarLocation = async (req, res) => {
+  try {
+    const carId = req.params.carId;
+    const userId = req.params.userId;
+
+    const car = await Car.findById(carId);
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+    console.log("car ", car);
+
+
+    const locationId = car.carLocation.geolocation;
+    const locations = await Location.findById(locationId);
+    if (!locations) {
+      return res.status(400).json({ error: 'Location not found' });
+    }
+    console.log("location ", locations);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    console.log("user ", user);
+
+
+    const distance = calculateHaversineDistance(
+      car.location.coordinates[1], // Car's latitude
+      // console.log("car.location.coordinates[1],", car.location.coordinates[1]),
+      car.location.coordinates[0], // Car's longitude
+      // console.log("car.location.coordinates[0],", car.location.coordinates[0]),
+
+      user.location.coordinates[1], // User's latitude
+      // console.log("user.location.coordinates[1],", user.location.coordinates[1]),
+
+      user.location.coordinates[0], // User's longitude
+      // console.log("user.location.coordinates[0],", user.location.coordinates[0]),
+
+    );
+
+    console.log("distance", distance);
+    const carLocationData = {
+      address: car.carLocation,
+      geolocation: locations,
+      distance: distance
+    };
+
+    res.status(200).json({ carLocation: carLocationData });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+// Function to calculate distance using Haversine formula
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const earthRadius = 6371;
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = earthRadius * c; // Distance in kilometers
+
+  return distance;
+}
+
+function toRadians(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+
+
 
 
 
@@ -290,4 +412,7 @@ module.exports = {
   addToFavorites,
   getFavoriteCars,
   becomeHost,
+  popularCars,
+  getCarLocation
+
 };

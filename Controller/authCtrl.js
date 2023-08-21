@@ -1,6 +1,8 @@
 const User = require("../Model/authModel");
 const OTP = require("../Config/OTP-Token");
 const { createResponse } = require("../utils/response");
+const Location = require("../Model/locationModel");
+
 
 ////////////////////////////////////////// CREATE USER /////////////////////////////////
 
@@ -210,6 +212,32 @@ const resetName = async (req, res) => {
   }
 };
 
+
+const updateUserLocation = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.location = {
+      type: 'Point',
+      coordinates: [req.body.latitude, req.body.longitude],
+    };
+
+    await user.save();
+
+    res.status(200).json({ message: 'User location updated successfully', data: user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
 module.exports = {
   createUser,
   loginUser,
@@ -221,4 +249,5 @@ module.exports = {
   resendOTP,
   ForgetPassword,
   resetName,
+  updateUserLocation
 };

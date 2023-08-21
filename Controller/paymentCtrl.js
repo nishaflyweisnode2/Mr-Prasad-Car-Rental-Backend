@@ -5,6 +5,10 @@ const id = uuid.v4();
 const payment = require("../Model/paymentModel");
 const Booking = require("../Model/bookingModel");
 const User = require("../Model/authModel");
+const Offer = require('../Model/offerModel');
+const Car = require("../Model/carModel");
+
+
 
 // const { updateMany } = require("../Model/authModel");
 
@@ -76,28 +80,24 @@ const User = require("../Model/authModel");
 
 
 
-const CreatePaymentOrder = async (req, res) => {
+const CreatePaymentOrder1 = async (req, res) => {
   const { userId, bookingId, amount, paymentMethod } = req.body;
 
-  // Validate the request body
   if (!userId || !bookingId || !amount || !paymentMethod) {
     return res.status(400).send("Invalid request body");
   }
 
   try {
-    // Check if the user exists
     const user = await User.findOne({ _id: userId });
     if (!user) {
       return res.status(404).send("User not found");
     }
 
-    // Check if the booking exists
     const booking = await Booking.findOne({ _id: bookingId });
     if (!booking) {
       return res.status(404).send("Booking not found");
     }
 
-    // Create a new payment
     const CreatePayment = new payment({
       userId,
       bookingId,
@@ -110,13 +110,84 @@ const CreatePaymentOrder = async (req, res) => {
       date: new Date(),
     });
 
-    // Save the payment
     const paymentResult = await CreatePayment.save();
 
-    // Update the booking status to 'paid'
     await Booking.findByIdAndUpdate(bookingId, { $set: { status: 'paid' } });
 
-    // Return the new payment
+    res.status(201).json({ message: 'Payment created successfully', payment: paymentResult });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const CreatePaymentOrder = async (req, res) => {
+  const { userId, bookingId, paymentMethod, offerCode } = req.body;
+
+  if (!userId || !bookingId || !paymentMethod) {
+    return res.status(400).send("Invalid request body");
+  }
+  try {
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    const booking = await Booking.findOne({ _id: bookingId });
+    if (!booking) {
+      return res.status(404).send("Booking not found");
+    }
+    const amount = booking.price;
+
+    let appliedOffer = null;
+    if (offerCode) {
+      appliedOffer = await Offer.findOne({
+        offerCode,
+        startDate: { $lte: new Date() },
+        endDate: { $gte: new Date() },
+      });
+      if (!appliedOffer) {
+        return res.status(400).json({ error: "Invalid offer code or offer has expired" });
+      }
+      const checkBookingCar = booking.car
+      const checkOfferCar = appliedOffer.car
+      if (appliedOffer.car) {
+        if (!checkBookingCar.equals(checkOfferCar)) {
+          return res.status(400).json({ error: "offer code not applied for this car" });
+        }
+      }
+
+
+    }
+
+    const finalAmount = appliedOffer ? amount * (1 - appliedOffer.discountPercentage / 100) : amount;
+
+    const CreatePayment = new payment({
+      userId,
+      bookingId,
+      amount,
+      paymentMethod,
+      status: true,
+      receipt: "",
+      amount_paid: finalAmount,
+      type: "given",
+      date: new Date(),
+      offer: appliedOffer,
+    });
+
+    const paymentResult = await CreatePayment.save();
+
+    await Booking.findByIdAndUpdate(bookingId, { $set: { status: 'paid' } });
+
+    const car = await Car.findById(booking.car);
+
+    if (!car) {
+      return res.status(404).json({ error: "Car not found" });
+    }
+
+    // Increase the rentalCount of the car
+    car.rentalCount += 1;
+    await car.save();
+
     res.status(201).json({ message: 'Payment created successfully', payment: paymentResult });
   } catch (error) {
     console.error(error);
@@ -126,28 +197,28 @@ const CreatePaymentOrder = async (req, res) => {
 
 
 const getAllPayments = async (req, res) => {
-    try {
-        const Data = await payment.find();
-        res.status(200).json({ data: Data });
-    } catch (err) {
-        console.log(err);
-        res.state(400).json({
-            message: err.message,
-        });
-    }
+  try {
+    const Data = await payment.find();
+    res.status(200).json({ data: Data });
+  } catch (err) {
+    console.log(err);
+    res.state(400).json({
+      message: err.message,
+    });
+  }
 };
 
 const GetPaymentsById = async (req, res) => {
-    try {
-        const Data = await payment.findById({ _id: req.params.id });
-        res.status(200).json({ details: Data });
-    } catch (err) {
-        console.log(err);
-        res.status(400).json({ message: err.message });
-    }
+  try {
+    const Data = await payment.findById({ _id: req.params.id });
+    res.status(200).json({ details: Data });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({ message: err.message });
+  }
 };
 
-    
+
 module.exports = {
   CreatePaymentOrder,
   getAllPayments,

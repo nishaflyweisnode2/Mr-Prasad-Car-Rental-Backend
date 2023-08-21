@@ -6,4 +6,5 @@ router.post("/create", signUpAdmin);
 router.post("/login", loginAdmin);
 router.post("/forget", ForgetPassword);
 
+
 module.exports = router;

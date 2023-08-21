@@ -2,20 +2,20 @@ const mongoose = require("mongoose");
 
 const paymentSchema = mongoose.Schema({
     userId: {
-        type: mongoose.Schema.Types.ObjectId, 
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
         require: true
     },
     name: {
         type: String,
-        // required: true,
     },
     invoice: {
         type: String,
     },
     amount: {
-        type: Number,
-        // required: true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'booking',
+        type: Number
     },
     bookingId: {
         type: mongoose.SchemaTypes.ObjectId,
@@ -27,7 +27,6 @@ const paymentSchema = mongoose.Schema({
     },
     receipt: {
         type: String,
-        // required: true,
     },
     amount_paid: {
         type: Number,
@@ -58,6 +57,10 @@ const paymentSchema = mongoose.Schema({
         type: String,
         default: "Ordered",
         enum: ["Cancelled", "Invoiced", "Ordered"],
+    },
+    offer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Offer",
     },
 });
 
