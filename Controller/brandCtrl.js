@@ -2,7 +2,7 @@ const Brand = require("../Model/brandModel");
 
 const getBrand = async (req, res) => {
   const brands = await Brand.find().sort("name");
-  res.send({ msg: brands });
+  res.status(201).send({ status: 201, data: brands });
 };
 
 const getSingleBrand = async (req, res) => {
@@ -10,7 +10,7 @@ const getSingleBrand = async (req, res) => {
 
   if (!brand) return res.status(404).send(notFoundError);
 
-  res.send(brand);
+  res.status(200).send({ status: 200, data: brand });
 };
 
 const createBrand = async (req, res) => {

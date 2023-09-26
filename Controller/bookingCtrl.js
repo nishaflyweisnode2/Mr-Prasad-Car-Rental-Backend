@@ -13,7 +13,7 @@ const createBooking = async (req, res) => {
     }
 
     // Check if the car is available for the requested dates
-    const carexist = await Car.findById({_id:car});
+    const carexist = await Car.findById({ _id: car });
 
     if (!carexist) {
       res.status(400).send("Car is not available");
@@ -22,7 +22,7 @@ const createBooking = async (req, res) => {
 
     // Create the booking
     const booking = new Booking({
-      car:carexist._id,
+      car: carexist._id,
       user,
       pickupLocation,
       dropOffLocation,
@@ -34,11 +34,11 @@ const createBooking = async (req, res) => {
       price,
     });
     await booking.save();
-    res.status(201).send(booking);
+    res.status(201).send({ status: 201, data: booking });
   } catch (error) {
     res.status(500).send("Create Booking failed");
   }
-  
+
 };
 
 /////////////////////////////// UPDATE BOOKING //////////////////////////
@@ -54,7 +54,7 @@ const updateBooking = async (req, res) => {
     }
 
     await booking.save();
-    res.json({ updated_Successfully: booking });
+    return res.status(200).json({ status: 200, message: "updated_Successfully", data: booking });
   } catch (error) {
     res.status(500).json({ error: "Failed to update booking" });
   }
@@ -74,7 +74,7 @@ const getSingleBooking = async (req, res) => {
       return res.status(404).json({ error: "Booking not found" });
     }
     console.log(booking);
-    res.json({ show_by_id_Successfully: booking });
+    return res.status(200).json({ status: 200, message: "show_by_id_Successfully", data: booking });
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve booking" });
   }
@@ -96,7 +96,7 @@ const getAllBooking = async (req, res) => {
       .limit(limit)
       .skip((page - 1) * limit);
 
-    res.status(200).json(bookings);
+    return res.status(200).json({ status: 200, data: bookings });
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
@@ -113,7 +113,7 @@ const deleteBooking = async (req, res) => {
       return res.status(404).json({ error: "Booking not found" });
     }
     console.log(booking);
-    res.json(booking);
+    res.status(200).json({ status: 200, data: booking });
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve booking" });
   }
@@ -127,7 +127,7 @@ const bookingDate = async (req, res) => {
     // const bookings = await Booking.find({from: { $lte: from },to: { $gte: to },});
     const bookings = await Booking.find(date);
 
-    res.json(bookings);
+    return res.status(201).json({ status: 201, data: bookings });
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve bookings" });
   }
@@ -144,7 +144,7 @@ const bookingTimeRange = async (req, res) => {
       to: { $gte: startTime },
     }).populate("car", "name");
 
-    res.json(bookings);
+    return res.status(201).json({ status: 201, data: bookings });
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve bookings" });
   }

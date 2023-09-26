@@ -66,7 +66,7 @@ const createCar = async (req, res) => {
 
     const savedCar = await newCar.save();
 
-    res.json(savedCar);
+    return res.status(201).json({ status: 201, data: savedCar });
   } catch (error) {
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map((err) => err.message);
@@ -88,7 +88,7 @@ const getCarList = async (req, res) => {
     if (!carList) {
       return res.status(404).json({ error: 'Car not found' });
     }
-    res.json(carList);
+    return res.status(200).json({ status: 200, data: carList });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -103,10 +103,10 @@ const getCar = async (req, res) => {
       .populate('brand', '-__v');
 
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({ status: 404, error: 'Car not found' });
     }
 
-    res.json(car);
+    return res.status(200).json({ status: 200, data: car });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -129,7 +129,7 @@ const updateCar = async (req, res) => {
     }
 
     await car.save();
-    res.json(car);
+    return res.status(200).json({ status: 200, data: car });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -140,7 +140,7 @@ const updateCar = async (req, res) => {
 const deleteCar = async (req, res) => {
   try {
     const carList = await Car.findByIdAndDelete(req.params.id).sort("name");
-    res.json(carList);
+    return res.status(200).json({ status: 200, data: carList });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -170,7 +170,7 @@ const getNearbyCar = async (req, res) => {
       },
     });
 
-    res.status(200).json(nearbyCars);
+    return res.status(200).json({ status: 200, data: nearbyCars });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
@@ -219,7 +219,7 @@ const getMyTrip = async (req, res) => {
       return res.status(404).json({ message: 'No paid trips found for the user' });
     }
 
-    res.json({ trips });
+    return res.status(200).json({ status: 200, data: trips });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
@@ -248,7 +248,7 @@ const addToFavorites = async (req, res) => {
       await user.save();
     }
 
-    res.json({ message: 'Car added to favorites', data: user });
+    return res.status(200).json({ status: 200, message: 'Car added to favorites', data: user });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -268,7 +268,7 @@ const getFavoriteCars = async (req, res) => {
     }
 
     if (user.favoriteCars) {
-      res.json({ message: 'Favorite Car retrived sucessfull', data: user.favoriteCars });
+      return res.status(200).json({ status: 200, message: 'Favorite Car retrived sucessfull', data: user.favoriteCars });
     } else {
       console.error('No favoriteCars found for user:', userId);
       res.status(500).json({ error: 'Internal server error1' });
@@ -291,7 +291,7 @@ const becomeHost = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json({ message: "You are now a host" });
+    return res.status(200).json({ status: 200, message: "You are now a host", data: user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
@@ -308,7 +308,7 @@ const popularCars = async (req, res) => {
     if (!popularCars || popularCars.length === 0) {
       return res.status(404).json({ error: "popular not found" });
     }
-    res.status(200).json({ popularCars });
+    return res.status(200).json({ status: 200, data: popularCars });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
@@ -364,7 +364,7 @@ const getCarLocation = async (req, res) => {
       distance: distance
     };
 
-    res.status(200).json({ carLocation: carLocationData });
+    return res.status(200).json({ status: 200, carLocation: carLocationData });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
