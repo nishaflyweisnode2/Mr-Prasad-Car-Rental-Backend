@@ -12,5 +12,8 @@ router.use("/term", require("./term&conditonRoute"));
 router.use("/user", require("./reviewRoute"));
 router.use("/payment", require("./paymentRoute"));
 router.use("/offer", require("./offerRoute"));
+router.use("/privacy", require("./privacyPolicyRoutes"));
+router.use("/cancellation", require("./cancellationPolicyRoute"));
+router.use("/damage", require("./damageProtectionRoute"));
 
 module.exports = router;

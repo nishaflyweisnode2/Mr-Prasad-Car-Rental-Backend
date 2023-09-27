@@ -9,9 +9,10 @@ const verifyToken = (req, res, next) => {
   if (!token) {
     return res.status(403).send("A token is required for authentication");
   }
+
   try {
     const decoded = jwt.verify(token.replace("Bearer ", ""), tokenKey);
-    req.user = decoded.id;
+    req.user = decoded;
     console.log("user", req.user);
     return next();
   } catch (err) {
@@ -19,6 +20,5 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-
-
 module.exports = verifyToken;
+
