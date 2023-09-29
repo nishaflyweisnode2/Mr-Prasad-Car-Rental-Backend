@@ -7,7 +7,7 @@ const createBooking = async (req, res) => {
     const { car, user, pickupLocation, dropOffLocation, pickupTime, dropOffTime, from, to, status, price } = req.body;
 
     // Validate the request body
-    if (!car || !user || !pickupLocation || !dropOffLocation || /* !pickupTime || !dropOffTime || */ !from || !to || !status || !price) {
+    if (!car || !user || !pickupLocation || !dropOffLocation ||  !pickupTime || !dropOffTime || !from || !to || !status || !price) {
       res.status(400).send("Invalid request body");
       return;
     }
