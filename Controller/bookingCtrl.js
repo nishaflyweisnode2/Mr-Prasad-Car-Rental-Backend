@@ -1,26 +1,72 @@
 const Booking = require("../Model/bookingModel");
 const Car = require("../Model/carModel");
+const Offer = require("../Model/offerModel");
+
 /////////////////////////////// CREATE BOOKING //////////////////////////
+
+// const createBooking = async (req, res) => {
+//   try {
+//     const { car, user, pickupLocation, dropOffLocation, pickupTime, dropOffTime, from, to, status, price } = req.body;
+
+//     // Validate the request body
+//     if (!car || !user || !pickupLocation || !dropOffLocation ||  !pickupTime || !dropOffTime || !from || !to || !status || !price) {
+//       res.status(400).send("Invalid request body");
+//       return;
+//     }
+
+//     // Check if the car is available for the requested dates
+//     const carexist = await Car.findById({ _id: car });
+
+//     if (!carexist) {
+//       res.status(400).send("Car is not available");
+//       return;
+//     }
+
+//     // Create the booking
+//     const booking = new Booking({
+//       car: carexist._id,
+//       user,
+//       pickupLocation,
+//       dropOffLocation,
+//       pickupTime,
+//       dropOffTime,
+//       from,
+//       to,
+//       status,
+//       price,
+//     });
+//     await booking.save();
+//     res.status(201).send({ status: 201, data: booking });
+//   } catch (error) {
+//     res.status(500).send("Create Booking failed");
+//   }
+
+// };
 
 const createBooking = async (req, res) => {
   try {
-    const { car, user, pickupLocation, dropOffLocation, pickupTime, dropOffTime, from, to, status, price } = req.body;
+    const { car, user, pickupLocation, dropOffLocation, pickupTime, dropOffTime, from, to, status, price, offerCode } = req.body;
 
-    // Validate the request body
-    if (!car || !user || !pickupLocation || !dropOffLocation ||  !pickupTime || !dropOffTime || !from || !to || !status || !price) {
-      res.status(400).send("Invalid request body");
-      return;
+    if (!car || !user || !pickupLocation || !dropOffLocation || !pickupTime || !dropOffTime || !from || !to || !status || !price) {
+      return res.status(400).send("Invalid request body");
     }
 
-    // Check if the car is available for the requested dates
     const carexist = await Car.findById({ _id: car });
 
     if (!carexist) {
-      res.status(400).send("Car is not available");
-      return;
+      return res.status(400).send("Car is not available");
     }
 
-    // Create the booking
+    const offer = await Offer.findOne({ offerCode });
+
+    if (!offer) {
+      return res.status(400).send("Invalid offer code");
+    }
+
+    const discountPrice = price - (price * (offer.discountPercentage / 100));
+    console.log("discountPrice", discountPrice);
+    console.log("offer", offer.discountPercentage);
+
     const booking = new Booking({
       car: carexist._id,
       user,
@@ -32,13 +78,16 @@ const createBooking = async (req, res) => {
       to,
       status,
       price,
+      offerCode,
+      discountPrice,
     });
-    await booking.save();
-    res.status(201).send({ status: 201, data: booking });
-  } catch (error) {
-    res.status(500).send("Create Booking failed");
-  }
 
+    await booking.save();
+    return res.status(201).send({ status: 201, data: booking });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: 500, message: 'Create Booking failed', error: error.message });
+  }
 };
 
 /////////////////////////////// UPDATE BOOKING //////////////////////////

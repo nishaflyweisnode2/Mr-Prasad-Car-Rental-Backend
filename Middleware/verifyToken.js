@@ -13,7 +13,7 @@ const verifyToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token.replace("Bearer ", ""), tokenKey);
     req.user = decoded;
-    console.log("user", req.user);
+    console.log("tokenUser", req.user);
     return next();
   } catch (err) {
     return res.status(401).send("Invalid Token");

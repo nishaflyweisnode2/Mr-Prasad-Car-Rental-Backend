@@ -27,7 +27,7 @@ const bookingSchema = new mongoose.Schema(
     },
     pickupTime: {
       type: String,
-      default:""
+      default: ""
       // required: [true, "can't be blank"],
     },
     dropOffTime: {
@@ -52,6 +52,12 @@ const bookingSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: [true, "can't be blank"],
+    },
+    offerCode: {
+      type: String,
+    },
+    discountPrice: {
+      type: Number,
     },
   },
   {

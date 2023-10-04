@@ -145,6 +145,7 @@ const CreatePaymentOrder = async (req, res) => {
         startDate: { $lte: new Date() },
         endDate: { $gte: new Date() },
       });
+      console.log(appliedOffer);
       if (!appliedOffer) {
         return res.status(400).json({ error: "Invalid offer code or offer has expired" });
       }
@@ -194,6 +195,7 @@ const CreatePaymentOrder = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 const getAllPayments = async (req, res) => {
