@@ -12,9 +12,8 @@ const CarSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  image: {
-    type: String,
-  },
+  images: [String],
+  videos: [String],
   brand: {
     type: ObjectId,
     ref: 'Brand',
@@ -102,6 +101,13 @@ const CarSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  availability: [
+    {
+      date: String,
+      time: String,
+      isBooked: { type: Boolean, default: false },
+    }
+  ],
 });
 
 CarSchema.index({ location: '2dsphere' });

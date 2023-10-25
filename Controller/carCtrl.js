@@ -5,7 +5,6 @@ const Booking = require("../Model/bookingModel");
 const Location = require("../Model/locationModel");
 const User = require("../Model/authModel");
 
-
 ///////////////////////////////////////////// CREATE CAR //////////////////////////////////
 
 // const createCar = async (req, res) => {
@@ -78,9 +77,37 @@ const createCar = async (req, res) => {
   }
 };
 
+const uploadCarImageVideo = async (req, res) => {
+  try {
+    const carId = req.params.carId;
+
+    const car = await Car.findById(carId);
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    if (req.files.images) {
+      car.images = req.files.images.map((image) => image.path);
+    }
+
+    if (req.files.videos) {
+      car.videos = req.files.videos.map((video) => video.path);
+    }
+
+    await car.save();
+
+    return res.status(200).json({ message: 'Car media updated successfully', data: car });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+
 ///////////////////////////////////////////// GET ALL CARS //////////////////////////////////
 
-const getCarList = async (req, res) => {
+const getCarList1 = async (req, res) => {
   try {
     const carList = await Car.find()
       .populate('owner', 'name')
@@ -93,6 +120,35 @@ const getCarList = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+const getCarList = async (req, res) => {
+  try {
+    const { date, time, isBooked } = req.query;
+
+    const filter = {};
+
+    if (date && time) {
+      filter['availability.date'] = date;
+      filter['availability.time'] = time;
+      filter['availability.isBooked'] = isBooked === 'true';
+    } else if (isBooked) {
+      filter['availability.isBooked'] = isBooked === 'true';
+    }
+
+    const carList = await Car.find(filter)
+      .populate('owner', 'name')
+      .populate('brand', '-__v');
+
+    if (!carList) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    return res.status(200).json({ status: 200, data: carList });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 
 ///////////////////////////////////////////// GET SINGLE CAR //////////////////////////////////
 
@@ -395,6 +451,55 @@ function toRadians(degrees) {
 }
 
 
+const addOrUpdateAvailability = async (req, res) => {
+  const { carId } = req.params;
+  const { date, time, isBooked } = req.body;
+
+  try {
+    const car = await Car.findById(carId);
+    if (!car) {
+      return res.status(404).json({ message: 'Car not found' });
+    }
+
+    const availabilitySlot = car.availability.find(slot => slot.date === date && slot.time === time);
+
+    if (availabilitySlot) {
+      availabilitySlot.isBooked = isBooked;
+    } else {
+      car.availability.push({ date, time, isBooked });
+    }
+
+    await car.save();
+    return res.status(200).json({ message: 'Availability updated successfully', data: car.availability });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'An error occurred while updating availability' });
+  }
+};
+
+
+const checkCarAvailability = async (req, res) => {
+  const { date, time } = req.query;
+
+  try {
+    const availableCars = await Car.find({
+      'availability.date': date,
+      'availability.time': time,
+      'availability.isBooked': false,
+    });
+
+    return res.status(200).json(availableCars);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'An error occurred while checking car availability' });
+  }
+};
+
+
+
+
+
+
 
 
 
@@ -403,6 +508,7 @@ function toRadians(degrees) {
 
 module.exports = {
   createCar,
+uploadCarImageVideo,
   getCarList,
   getCar,
   updateCar,
@@ -413,6 +519,8 @@ module.exports = {
   getFavoriteCars,
   becomeHost,
   popularCars,
-  getCarLocation
+  getCarLocation,
+  addOrUpdateAvailability,
+  checkCarAvailability,
 
 };

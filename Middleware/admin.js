@@ -4,8 +4,11 @@ const verifyToken = require("./verifyToken");
 // require("dotenv").config();
 
 const Admin = async (req, res, next) => {
-  const token = req.header["Authorization"].split(" ")[1];
-// console.log(token);
+  // const token = req.header["Authorization"].split(" ")[1];
+  const token =
+  req.get("Authorization")?.split("Bearer ")[1] ||
+  req.headers["x-access-token"];
+  // console.log(token);
   try {
     const decodedToken = await verifyToken(token);
 // console.log(decodedToken:"token");
