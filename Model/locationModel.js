@@ -5,12 +5,9 @@ const locationSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  latitude: {
-    type: Number,
-    required: true,
-  },
-  longitude: {
-    type: Number,
+  coordinates: {
+    type: [Number],
+    index: '2dsphere',
     required: true,
   },
   type: {
@@ -20,7 +17,6 @@ const locationSchema = new mongoose.Schema({
   },
 });
 
-const locationModel = mongoose.model('location', locationSchema);
+const LocationModel = mongoose.model('Location', locationSchema);
 
-
-module.exports = locationModel;
+module.exports = LocationModel;

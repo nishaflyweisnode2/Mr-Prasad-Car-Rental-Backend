@@ -77,7 +77,7 @@ const createCar = async (req, res) => {
   }
 };
 
-const uploadCarImageVideo = async (req, res) => {
+const uploadCarImageVideo1 = async (req, res) => {
   try {
     const carId = req.params.carId;
 
@@ -103,6 +103,123 @@ const uploadCarImageVideo = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+const uploadCarImage = async (req, res) => {
+  try {
+    const carId = req.params.carId;
+
+    const car = await Car.findById(carId);
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    let images = [];
+    if (req.files) {
+      for (let j = 0; j < req.files.length; j++) {
+        let obj = {
+          img: req.files[j].path,
+        };
+        images.push(obj);
+      }
+    }
+
+    car.images = images;
+
+
+    await car.save();
+
+    return res.status(200).json({ message: 'Car media updated successfully', data: car });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const uploadCarVideo1 = async (req, res) => {
+  try {
+    const carId = req.params.carId;
+    console.log('carId:', carId);
+    console.log(' req.files:', req.files);
+
+    const car = await Car.findById(carId);
+    console.log('car:', car);
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    console.log('Uploaded Video Files:', req.files);
+
+    let videos = [];
+    if (req.files && req.files.length > 0) {
+      for (let j = 0; j < req.files.length; j++) {
+        let obj = {
+          vid: req.files[j].path,
+        };
+        videos.push(obj);
+      }
+    } else {
+      return res.status(400).json({ error: 'No videos uploaded' });
+    }
+
+    car.videos = videos;
+
+    await car.save();
+
+    return res.status(200).json({ message: 'Car media updated successfully', data: car });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const uploadCarVideo = async (req, res) => {
+  try {
+    console.log('Request Object:', req);
+    const carId = req.params.carId;
+    console.log('carId:', carId);
+
+    const car = await Car.findById(carId);
+    console.log('car:', car);
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    console.log('Uploaded Video Files:');
+    for (let j = 0; j < req.files.length; j++) {
+      console.log(`File ${j + 1}:`);
+      console.log('Field name:', req.files[j].fieldname);
+      console.log('Original name:', req.files[j].originalname);
+      console.log('Path:', req.files[j].path);
+      console.log('Size:', req.files[j].size);
+    }
+
+    let videos = [];
+    if (req.files && req.files.length > 0) {
+      for (let j = 0; j < req.files.length; j++) {
+        let obj = {
+          vid: req.files[j].path,
+        };
+        videos.push(obj);
+      }
+    } else {
+      return res.status(400).json({ error: 'No videos uploaded' });
+    }
+
+    car.videos = videos;
+
+    await car.save();
+
+    return res.status(200).json({ message: 'Car media updated successfully', data: car });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
 
 
 ///////////////////////////////////////////// GET ALL CARS //////////////////////////////////
@@ -428,6 +545,28 @@ const getCarLocation = async (req, res) => {
 };
 
 
+const updateCarLockStatus = async (req, res) => {
+  try {
+    const carId = req.params.carId;
+    const isCarLock = req.body.isCarLock;
+
+    const car = await Car.findById(carId);
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    car.isCarLock = isCarLock;
+    await car.save();
+
+    return res.status(200).json({ message: 'Car lock status updated successfully', data: car });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
 
 // Function to calculate distance using Haversine formula
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
@@ -506,9 +645,13 @@ const checkCarAvailability = async (req, res) => {
 
 
 
+
+
+
 module.exports = {
   createCar,
-uploadCarImageVideo,
+  uploadCarImage,
+  uploadCarVideo,
   getCarList,
   getCar,
   updateCar,
@@ -520,6 +663,7 @@ uploadCarImageVideo,
   becomeHost,
   popularCars,
   getCarLocation,
+  updateCarLockStatus,
   addOrUpdateAvailability,
   checkCarAvailability,
 

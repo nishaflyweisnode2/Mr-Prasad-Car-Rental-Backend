@@ -2,7 +2,8 @@ const router = require("express").Router();
 
 const {
   createCar,
-  uploadCarImageVideo,
+  uploadCarImage,
+  uploadCarVideo,
   getCarList,
   getCar,
   updateCar,
@@ -14,6 +15,7 @@ const {
   becomeHost,
   popularCars,
   getCarLocation,
+  updateCarLockStatus,
   addCarForRental,
   addOrUpdateAvailability,
   checkCarAvailability,
@@ -22,15 +24,21 @@ const {
 
 const verifyToken = require("../Middleware/verifyToken");
 
-const upload = require("../Middleware/upload");
+const { upload, carImage, carVideo } = require("../Middleware/upload");
 
 
 router.post("/create", createCar);
-router.put('/upload-media/:carId', upload.fields([
-  { name: 'images', maxCount: 5 },
-  { name: 'videos', maxCount: 2 },
-]), uploadCarImageVideo);
- router.get("/", verifyToken, getCarList);
+router.put('/upload-image/:carId', carImage.array('image'), uploadCarImage);
+// router.put('/uploadCar-video/:carId', carVideo.array('video'), uploadCarVideo);
+router.put('/uploadCar-video/:carId', carVideo.array('video'), (req, res, next) => {
+  console.log('Request Files:', req.files);
+  next();
+}, uploadCarVideo);
+
+// router.put('/upload-video/:carId', upload.fields([
+//   { name: 'videos', maxCount: 2 },
+// ]), uploadCarImageVideo);
+router.get("/", verifyToken, getCarList);
 router.get("/:id", getCar);
 router.put("/:id", verifyToken, updateCar);
 router.delete("/:id", deleteCar);
@@ -41,6 +49,7 @@ router.get('/favorite-cars/:userId', verifyToken, getFavoriteCars);
 router.post("/become-host/:userId", verifyToken, becomeHost);
 router.get('/popular', popularCars);
 router.get('/cars/:carId/location/:userId', verifyToken, getCarLocation);
+router.put('/cars/:carId/update-lock',  updateCarLockStatus);
 router.post('/cars/:carId/availability', verifyToken, addOrUpdateAvailability);
 router.get('/cars/availability', verifyToken, checkCarAvailability);
 

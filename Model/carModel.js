@@ -12,8 +12,8 @@ const CarSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  images: [String],
-  videos: [String],
+  images: [{ img: { type: String } }],
+  videos: [{ vid: { type: String } }],
   brand: {
     type: ObjectId,
     ref: 'Brand',
@@ -24,7 +24,7 @@ const CarSchema = new mongoose.Schema({
   },
   mileage: {
     type: Number,
-    default: "",
+    default: 0,
   },
   numberOfSeats: {
     type: Number,
@@ -62,23 +62,25 @@ const CarSchema = new mongoose.Schema({
     required: true,
   },
   pickup: {
-    type: String,
+    type: ObjectId,
+    ref: 'Location',
   },
   Drop: {
-    type: String,
+    type: ObjectId,
+    ref: 'Location',
   },
   Date: {
-    type: String,
+    type: Date,
   },
   location: {
     type: {
       type: String,
       enum: ["Point"],
-      // required: true
+      required: true,
     },
     coordinates: {
       type: [Number],
-      // required: true
+      required: true,
     },
   },
   aboutCar: {
@@ -93,21 +95,23 @@ const CarSchema = new mongoose.Schema({
     },
     geolocation: {
       type: ObjectId,
-      ref: 'location',
-      // required: true,
+      ref: 'Location',
     }
   },
   rentalCount: {
     type: Number,
     default: 0,
   },
-  availability: [
-    {
-      date: String,
-      time: String,
-      isBooked: { type: Boolean, default: false },
-    }
-  ],
+  isCarLock: {
+    type: String,
+    default: true,
+  },
+  availability:
+  {
+    date: Date,
+    time: String,
+    isBooked: { type: Boolean, default: false },
+  }
 });
 
 CarSchema.index({ location: '2dsphere' });
