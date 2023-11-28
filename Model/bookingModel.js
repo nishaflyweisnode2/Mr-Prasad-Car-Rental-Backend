@@ -26,14 +26,20 @@ const bookingSchema = new mongoose.Schema(
       ref: "Location",
     },
     pickupTime: {
-      type: String,
-      default: ""
-      // required: [true, "can't be blank"],
+      type: Date,
+      default: null,
     },
     dropOffTime: {
+      type: Date,
+      default: null,
+    },
+    isTimeExtended: {
+      type: Boolean,
+      default: false,
+    },
+    extendedDropOffTime: {
       type: String,
-      default: "",
-      // required: [true, "can't be blank"],
+      default: null,
     },
     from: {
       type: String,
@@ -45,7 +51,7 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["PENDING", "DEPOSIT", "PAID", "RESERVED", "CANCELLED"],
+      enum: ["PENDING", "PAID", "RESERVED", "CANCELLED"],
       default: "PENDING",
       required: [true, "can't be blank"],
     },
@@ -58,6 +64,16 @@ const bookingSchema = new mongoose.Schema(
     },
     discountPrice: {
       type: Number,
+    },
+    tripStartTime: {
+      type: Date,
+    },
+    tripEndTime: {
+      type: Date,
+    },
+    isTripCompleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

@@ -15,5 +15,6 @@ router.use("/offer", require("./offerRoute"));
 router.use("/privacy", require("./privacyPolicyRoutes"));
 router.use("/cancellation", require("./cancellationPolicyRoute"));
 router.use("/damage", require("./damageProtectionRoute"));
+router.use("/support", require("./supportRoute"));
 
 module.exports = router;

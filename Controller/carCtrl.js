@@ -4,6 +4,9 @@ const UserDb = require("../Model/authModel");
 const Booking = require("../Model/bookingModel");
 const Location = require("../Model/locationModel");
 const User = require("../Model/authModel");
+const moment = require('moment')
+
+
 
 ///////////////////////////////////////////// CREATE CAR //////////////////////////////////
 
@@ -386,7 +389,7 @@ const getNearbyCar = async (req, res) => {
 const getMyTrip = async (req, res) => {
   const userId = req.params.userId;
   try {
-    const trips = await Booking.find({ 'user': userId, 'status': 'paid' }).populate('car');
+    const trips = await Booking.find({ 'user': userId, 'status': 'PAID' }).populate('car');
 
     if (!trips || trips.length === 0) {
       return res.status(404).json({ message: 'No paid trips found for the user' });
@@ -635,6 +638,96 @@ const checkCarAvailability = async (req, res) => {
 };
 
 
+const startTrip = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    if (booking.status !== 'PAID') {
+      return res.status(400).json({ error: 'Cannot start trip for unpaid booking' });
+    }
+
+    const car = await Car.findById(booking.car);
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    if (car.isCarLock === true) {
+      return res.status(400).json({ error: 'Cannot start trip for car lock first approved by admin ' });
+    }
+
+    car.isOnTrip = true;
+    await car.save();
+
+    booking.tripStartTime = new Date();
+    await booking.save();
+
+    return res.status(200).json({ status: 200, message: 'Trip started successfully' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+const endTrip = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    if (booking.status !== 'PAID') {
+      return res.status(400).json({ error: 'Cannot end trip for unpaid booking' });
+    }
+
+    const car = await Car.findById(booking.car);
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    if (car.isCarLock === true) {
+      return res.status(400).json({ error: 'Cannot end trip for car lock; first, unlock the car through admin approval' });
+    }
+
+    car.isOnTrip = false;
+    await car.save();
+
+    booking.tripEndTime = new Date();
+    booking.isTripCompleted = true
+    await booking.save();
+
+    const countdownMilliseconds = car.unavailableInterval * 60 * 60 * 1000;
+    setTimeout(async () => {
+      car.nextAvailableDateTime = new Date();
+      car.isCarLock = true;
+      await car.save();
+    }, countdownMilliseconds);
+
+    car.isCarLock = true;
+    await car.save();
+
+    return res.status(200).json({ status: 200, message: 'Trip ended successfully' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+
 
 
 
@@ -666,5 +759,6 @@ module.exports = {
   updateCarLockStatus,
   addOrUpdateAvailability,
   checkCarAvailability,
-
+  startTrip,
+  endTrip
 };

@@ -1,7 +1,7 @@
 const Booking = require("../Model/bookingModel");
 const Car = require("../Model/carModel");
 const Offer = require("../Model/offerModel");
-
+const moment = require('moment')
 /////////////////////////////// CREATE BOOKING //////////////////////////
 
 // const createBooking = async (req, res) => {
@@ -199,6 +199,102 @@ const bookingTimeRange = async (req, res) => {
   }
 };
 
+
+const isCarAvailableForPeriod = async (carId, startTime, endTime) => {
+  const existingBookings = await Booking.find({
+    car: carId,
+    $or: [
+      { pickupTime: { $lt: endTime }, dropOffTime: { $gt: startTime } },
+      { pickupTime: { $lt: startTime }, dropOffTime: { $gt: startTime } },
+    ],
+  });
+
+  return existingBookings.length === 0;
+};
+
+const extendBooking = async (req, res) => {
+  try {
+    const bookingId = req.params.bookingId;
+    const { newDropOffTime } = req.body;
+
+    if (!bookingId || !newDropOffTime) {
+      return res.status(400).send("Invalid request body");
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).send("Booking not found");
+    }
+
+    const isAvailable = await isCarAvailableForPeriod(booking.car, booking.dropOffTime, newDropOffTime);
+    if (!isAvailable) {
+      return res.status(400).send("Car is not available for the extended period");
+    }
+
+    booking.dropOffTime = newDropOffTime;
+    booking.isTimeExtended = true;
+    booking.extendedDropOffTime = newDropOffTime;
+
+    await booking.save();
+
+    return res.status(200).json({ status: 200, message: "Booking extended successfully", data: booking });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ status: 500, message: 'Failed to extend booking', error: error.message });
+  }
+};
+
+
+const bookingsExtendedTimes = async (req, res) => {
+  try {
+    const bookings = await Booking.find({ isTimeExtended: true });
+
+    if (bookings.length === 0) {
+      return res.status(404).json({ status: 404, message: 'No bookings with extended times found' });
+    }
+
+    return res.status(200).json({ status: 200, data: bookings });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: 500, message: 'Failed to retrieve bookings with extended times', error: error });
+  }
+}
+
+
+const updateBookingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!id || !status) {
+      return res.status(400).json({ error: "Invalid request body" });
+    }
+
+    const validStatusValues = ["PENDING", "PAID", "RESERVED", "CANCELLED"];
+    if (!validStatusValues.includes(status)) {
+      return res.status(400).json({ error: "Invalid status value" });
+    }
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    return res.status(200).json({ status: 200, message: "Booking status updated successfully", data: booking });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: 500, message: "Failed to update booking status", error: error.message });
+  }
+};
+
+
+
+
+
+
 module.exports = {
   createBooking,
   updateBooking,
@@ -207,4 +303,7 @@ module.exports = {
   deleteBooking,
   bookingDate,
   bookingTimeRange,
+  extendBooking,
+  bookingsExtendedTimes,
+  updateBookingStatus,
 };

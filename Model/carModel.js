@@ -103,7 +103,7 @@ const CarSchema = new mongoose.Schema({
     default: 0,
   },
   isCarLock: {
-    type: String,
+    type: Boolean,
     default: true,
   },
   availability:
@@ -111,7 +111,19 @@ const CarSchema = new mongoose.Schema({
     date: Date,
     time: String,
     isBooked: { type: Boolean, default: false },
-  }
+  },
+  unavailableInterval: {
+    type: Number,
+    default: 0,
+  },
+  isCarAvilable: {
+    type: Boolean,
+    default: false,
+  },
+  isOnTrip: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 CarSchema.index({ location: '2dsphere' });
