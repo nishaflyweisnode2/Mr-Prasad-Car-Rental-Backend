@@ -17,7 +17,6 @@ const {
   getCarLocation,
   updateCarLockStatus,
   addCarForRental,
-  addOrUpdateAvailability,
   checkCarAvailability,
   startTrip,
   endTrip,
@@ -52,7 +51,6 @@ router.post("/become-host/:userId", verifyToken, becomeHost);
 router.get('/popular', popularCars);
 router.get('/cars/:carId/location/:userId', verifyToken, getCarLocation);
 router.put('/cars/:carId/update-lock', updateCarLockStatus);
-router.post('/cars/:carId/availability', verifyToken, addOrUpdateAvailability);
 router.get('/cars/availability', verifyToken, checkCarAvailability);
 router.post('/start-trip/:bookingId', verifyToken, startTrip);
 router.post('/end-trip/:bookingId', verifyToken, endTrip);

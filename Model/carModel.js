@@ -106,15 +106,9 @@ const CarSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-  availability:
-  {
-    date: Date,
-    time: String,
-    isBooked: { type: Boolean, default: false },
-  },
   unavailableInterval: {
     type: Number,
-    default: 0,
+    default: 2,
   },
   isCarAvilable: {
     type: Boolean,

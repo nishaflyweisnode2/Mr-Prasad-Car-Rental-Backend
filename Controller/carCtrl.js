@@ -227,7 +227,7 @@ const uploadCarVideo = async (req, res) => {
 
 ///////////////////////////////////////////// GET ALL CARS //////////////////////////////////
 
-const getCarList1 = async (req, res) => {
+const getCarList = async (req, res) => {
   try {
     const carList = await Car.find()
       .populate('owner', 'name')
@@ -241,33 +241,6 @@ const getCarList1 = async (req, res) => {
   }
 };
 
-const getCarList = async (req, res) => {
-  try {
-    const { date, time, isBooked } = req.query;
-
-    const filter = {};
-
-    if (date && time) {
-      filter['availability.date'] = date;
-      filter['availability.time'] = time;
-      filter['availability.isBooked'] = isBooked === 'true';
-    } else if (isBooked) {
-      filter['availability.isBooked'] = isBooked === 'true';
-    }
-
-    const carList = await Car.find(filter)
-      .populate('owner', 'name')
-      .populate('brand', '-__v');
-
-    if (!carList) {
-      return res.status(404).json({ error: 'Car not found' });
-    }
-
-    return res.status(200).json({ status: 200, data: carList });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
 
 
 ///////////////////////////////////////////// GET SINGLE CAR //////////////////////////////////
@@ -326,24 +299,26 @@ const deleteCar = async (req, res) => {
 
 const getNearbyCar = async (req, res) => {
   try {
-    const { latitude, longitude /* radius */ } = req.query;
-    console.log(latitude, longitude /* radius */);
-    if (!latitude || !longitude  /* ||!radius */) {
-      return res.status(400).json({ error: 'Latitude and longitude are required.' });
+    const { latitude, longitude, radius } = req.query;
+
+    if (!latitude || !longitude || !radius) {
+      return res.status(400).json({ error: 'Latitude, longitude, and radius are required.' });
     }
 
-    // const userCoordinates = [parseFloat(longitude), parseFloat(latitude)];
+    const userCoordinates = [parseFloat(longitude), parseFloat(latitude)];
 
     const nearbyCars = await Car.find({
       location: {
         $near: {
           $geometry: {
             type: 'Point',
-            coordinates: [latitude, longitude],
+            coordinates: userCoordinates,
           },
-          $maxDistance: 500,
+          $maxDistance: parseInt(radius),
         },
       },
+      isCarAvailable: false,
+      isOnTrip: false,
     });
 
     return res.status(200).json({ status: 200, data: nearbyCars });
@@ -352,6 +327,7 @@ const getNearbyCar = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 ///////////////////////////////////////////// GET MY TRIP////////////////////////////////////
 
@@ -493,7 +469,6 @@ const popularCars = async (req, res) => {
 
 
 
-
 const getCarLocation = async (req, res) => {
   try {
     const carId = req.params.carId;
@@ -593,41 +568,53 @@ function toRadians(degrees) {
 }
 
 
-const addOrUpdateAvailability = async (req, res) => {
-  const { carId } = req.params;
-  const { date, time, isBooked } = req.body;
-
-  try {
-    const car = await Car.findById(carId);
-    if (!car) {
-      return res.status(404).json({ message: 'Car not found' });
-    }
-
-    const availabilitySlot = car.availability.find(slot => slot.date === date && slot.time === time);
-
-    if (availabilitySlot) {
-      availabilitySlot.isBooked = isBooked;
-    } else {
-      car.availability.push({ date, time, isBooked });
-    }
-
-    await car.save();
-    return res.status(200).json({ message: 'Availability updated successfully', data: car.availability });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'An error occurred while updating availability' });
-  }
-};
-
-
 const checkCarAvailability = async (req, res) => {
   const { date, time } = req.query;
+  const currentDateTime = new Date(`${date}T${time}`);
 
   try {
+    const bookedCars = await Booking.find({
+      $and: [
+        {
+          $or: [
+            {
+              'pickupTime': { $lte: currentDateTime },
+              'dropOffTime': { $gte: currentDateTime },
+            },
+            {
+              'pickupTime': { $gte: currentDateTime },
+              'dropOffTime': { $lte: currentDateTime },
+            },
+          ],
+        },
+        {
+          'status': 'PAID',
+        },
+      ],
+    });
+
+    const bookedCarIds = bookedCars.map(booking => booking.car);
+
     const availableCars = await Car.find({
-      'availability.date': date,
-      'availability.time': time,
-      'availability.isBooked': false,
+      $and: [
+        {
+          '_id': { $nin: bookedCarIds },
+          'isCarAvailable': false,
+          'isOnTrip': false,
+        },
+        {
+          $or: [
+            {
+              'nextAvailableDateTime': { $gte: currentDateTime },
+            },
+            {
+              'nextAvailableDateTime': { $lte: currentDateTime },
+              'isCarAvailable': false,
+              'isOnTrip': false,
+            },
+          ],
+        },
+      ],
     });
 
     return res.status(200).json(availableCars);
@@ -676,7 +663,6 @@ const startTrip = async (req, res) => {
 };
 
 
-
 const endTrip = async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -698,22 +684,25 @@ const endTrip = async (req, res) => {
     }
 
     if (car.isCarLock === true) {
-      return res.status(400).json({ error: 'Cannot end trip for car lock; first, unlock the car through admin approval' });
+      return res.status(400).json({ error: 'Cannot end trip for a car lock; first, unlock the car through admin approval' });
     }
 
     car.isOnTrip = false;
-    await car.save();
+    car.isCarAvilable = true;
 
     booking.tripEndTime = new Date();
-    booking.isTripCompleted = true
-    await booking.save();
+    booking.isTripCompleted = true;
 
     const countdownMilliseconds = car.unavailableInterval * 60 * 60 * 1000;
+    // const countdownMilliseconds = 30 * 1000; // 30 seconds
+
+    console.log("1", countdownMilliseconds);
     setTimeout(async () => {
-      car.nextAvailableDateTime = new Date();
-      car.isCarLock = true;
-      await car.save();
+      car.isCarAvilable = false;
+      const plainCar = car.toObject();
+      await Car.findByIdAndUpdate(car._id, plainCar);
     }, countdownMilliseconds);
+
 
     car.isCarLock = true;
     await car.save();
@@ -724,6 +713,7 @@ const endTrip = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
@@ -757,7 +747,6 @@ module.exports = {
   popularCars,
   getCarLocation,
   updateCarLockStatus,
-  addOrUpdateAvailability,
   checkCarAvailability,
   startTrip,
   endTrip
