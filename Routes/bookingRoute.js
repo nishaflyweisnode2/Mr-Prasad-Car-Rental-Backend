@@ -9,6 +9,7 @@ const {
   extendBooking,
   bookingsExtendedTimes,
   updateBookingStatus,
+  getBookingsByUser,
 
 } = require("../Controller/bookingCtrl");
 const Admin = require("../Middleware/admin");
@@ -20,6 +21,7 @@ router.post("/create", verifyToken, createBooking);
 router.put("/update/:id", verifyToken, updateBooking);
 router.get("/:id", getSingleBooking);
 router.get("/", getAllBooking);
+router.get('/bookings/:userId', getBookingsByUser);
 router.delete("/:id", Admin, deleteBooking);
 router.get("/:id/date", bookingDate);
 router.get("/:id/time", bookingTimeRange);

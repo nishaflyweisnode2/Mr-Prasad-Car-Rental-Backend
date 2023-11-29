@@ -291,6 +291,24 @@ const updateBookingStatus = async (req, res) => {
 };
 
 
+const getBookingsByUser = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const bookings = await Booking.find({ user: userId });
+
+    if (!bookings || bookings.length === 0) {
+      return res.status(404).json({ status: 404, message: 'No bookings found for the user' });
+    }
+
+    return res.status(200).json({ status: 200, data: bookings });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: 500, message: 'Failed to retrieve bookings for the user', error: error.message });
+  }
+};
+
+
 
 
 
@@ -306,4 +324,5 @@ module.exports = {
   extendBooking,
   bookingsExtendedTimes,
   updateBookingStatus,
+  getBookingsByUser,
 };

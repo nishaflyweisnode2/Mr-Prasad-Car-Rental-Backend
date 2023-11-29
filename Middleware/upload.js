@@ -54,7 +54,7 @@ const upload = multer({ storage: storage });
 
 const storage1 = new CloudinaryStorage({ cloudinary: cloudinary, params: { folder: "parsad/Car", allowed_formats: ["jpg", "jpeg", "png", "PNG", "xlsx", "xls", "pdf", "PDF"], }, });
 const carImage = multer({ storage: storage1 });
-const storage2 = new CloudinaryStorage({ cloudinary: cloudinary, params: { folder: "parsad/Car", allowed_formats: ["mp4", "mov", "avi", "MP4"], }, });
+const storage2 = new CloudinaryStorage({ cloudinary: cloudinary, params: { folder: "parsad/Car", allowed_formats: ["jpg", "jpeg", "png", "PNG", "xlsx", "xls", "pdf", "PDF", "mp4", "mov", "avi", "MP4"], }, });
 const carVideo = multer({ storage: storage2 });
 
 module.exports = { upload, carImage, carVideo };
