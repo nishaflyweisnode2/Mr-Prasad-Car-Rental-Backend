@@ -13,7 +13,7 @@ const bookingSchema = new mongoose.Schema(
     user: {
       type: ObjectId,
       required: [true, "can't be blank"],
-      ref: 'User'
+      ref: 'user'
     },
     pickupLocation: {
       type: ObjectId,

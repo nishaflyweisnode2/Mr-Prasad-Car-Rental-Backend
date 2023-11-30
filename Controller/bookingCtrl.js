@@ -295,7 +295,14 @@ const getBookingsByUser = async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    const bookings = await Booking.find({ user: userId });
+    const bookings = await Booking.find({ user: userId })
+      .populate('car')
+      .populate('user')
+      // select: 'user',)
+      .populate({
+        path: 'pickupLocation dropOffLocation',
+        // select: 'name address',
+      });
 
     if (!bookings || bookings.length === 0) {
       return res.status(404).json({ status: 404, message: 'No bookings found for the user' });
@@ -307,6 +314,7 @@ const getBookingsByUser = async (req, res) => {
     return res.status(500).json({ status: 500, message: 'Failed to retrieve bookings for the user', error: error.message });
   }
 };
+
 
 
 
