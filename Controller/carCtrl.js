@@ -569,8 +569,10 @@ function toRadians(degrees) {
 
 
 const checkCarAvailability = async (req, res) => {
-  const { date, time } = req.query;
-  const currentDateTime = new Date(`${date}T${time}`);
+  const { startDate, endDate, startTime, endTime } = req.query;
+
+  const startDateTime = new Date(`${startDate}T${startTime}`);
+  const endDateTime = new Date(`${endDate}T${endTime}`);
 
   try {
     const bookedCars = await Booking.find({
@@ -578,17 +580,23 @@ const checkCarAvailability = async (req, res) => {
         {
           $or: [
             {
-              'pickupTime': { $lte: currentDateTime },
-              'dropOffTime': { $gte: currentDateTime },
+              'pickupTime': { $lte: endDateTime },
+              'dropOffTime': { $gte: startDateTime },
             },
             {
-              'pickupTime': { $gte: currentDateTime },
-              'dropOffTime': { $lte: currentDateTime },
+              'pickupTime': { $gte: startDateTime },
+              'dropOffTime': { $lte: endDateTime },
             },
           ],
         },
         {
-          'status': 'PAID',
+          $or: [
+            { 'status': 'PAID', 'isTripCompleted': false },
+            {
+              'isTimeExtended': true,
+              'timeExtendedDropOffTime': { $gte: startDateTime, $lte: endDateTime },
+            },
+          ],
         },
       ],
     });
@@ -596,28 +604,13 @@ const checkCarAvailability = async (req, res) => {
     const bookedCarIds = bookedCars.map(booking => booking.car);
 
     const availableCars = await Car.find({
-      $and: [
-        {
-          '_id': { $nin: bookedCarIds },
-          'isCarAvailable': false,
-          'isOnTrip': false,
-        },
-        {
-          $or: [
-            {
-              'nextAvailableDateTime': { $gte: currentDateTime },
-            },
-            {
-              'nextAvailableDateTime': { $lte: currentDateTime },
-              'isCarAvailable': false,
-              'isOnTrip': false,
-            },
-          ],
-        },
-      ],
+      _id: { $nin: bookedCarIds },
+      isCarAvilable: false,
+      isOnTrip: false,
+      nextAvailableDateTime: { $gte: startDateTime, $lte: endDateTime },
     });
 
-    return res.status(200).json(availableCars);
+    return res.status(200).json({ status: 200, data: availableCars });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'An error occurred while checking car availability' });
