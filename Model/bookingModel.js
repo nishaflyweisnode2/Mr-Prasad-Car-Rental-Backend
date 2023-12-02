@@ -67,9 +67,11 @@ const bookingSchema = new mongoose.Schema(
     },
     tripStartTime: {
       type: Date,
+      default: null,
     },
     tripEndTime: {
       type: Date,
+      default: null
     },
     isTripCompleted: {
       type: Boolean,
