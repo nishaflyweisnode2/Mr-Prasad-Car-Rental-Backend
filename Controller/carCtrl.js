@@ -656,7 +656,7 @@ const startTrip = async (req, res) => {
 };
 
 
-const endTrip = async (req, res) => {
+const endTrip1 = async (req, res) => {
   try {
     const { bookingId } = req.params;
 
@@ -696,6 +696,60 @@ const endTrip = async (req, res) => {
       await Car.findByIdAndUpdate(car._id, plainCar);
     }, countdownMilliseconds);
 
+
+    car.isCarLock = true;
+    await car.save();
+
+    return res.status(200).json({ status: 200, message: 'Trip ended successfully' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const endTrip = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    if (booking.status !== 'PAID') {
+      return res.status(400).json({ error: 'Cannot end trip for unpaid booking' });
+    }
+
+    const car = await Car.findById(booking.car);
+
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    if (car.isCarLock === true) {
+      return res.status(400).json({ error: 'Cannot end trip for a car lock; first, unlock the car through admin approval' });
+    }
+
+    car.isOnTrip = false;
+    car.isCarAvilable = true;
+
+    booking.tripEndTime = new Date();
+    booking.isTripCompleted = true;
+
+    await Promise.all([
+      car.save(),
+      booking.save(),
+    ]);
+
+    const countdownMilliseconds = car.unavailableInterval * 60 * 60 * 1000;
+
+    console.log("1", countdownMilliseconds);
+
+    setTimeout(async () => {
+      car.isCarAvilable = false;
+      await car.save();
+    }, countdownMilliseconds);
 
     car.isCarLock = true;
     await car.save();
